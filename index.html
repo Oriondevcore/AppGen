@@ -1,297 +1,481 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zulu Live Translator</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#2563eb">
-    <link rel="manifest" href="data:application/json;base64,ewogICJnameIjogIlp1bHUgTGl2ZSIsCiAgInNob3J0X25hbWUiOiAiWnVsdUxpdmUiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2Y4ZmFmYmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMjU2M2ViIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsaXRpY29uLmNvbS81MTIvNDQxOC80NDE4NDcxLnBuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
-
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion App Gen | 2026 Architect Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zip-js/zip-js@2.7.34/dist/zip.min.js"></script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .pulse-speak { animation: speak-pulse 1.5s ease-in-out infinite; }
-        @keyframes speak-pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.02); opacity: 0.9; }
-            100% { transform: scale(1); opacity: 1; }
+        [x-cloak] { display: none !important; }
+        
+        /* Glassmorphism Dark Theme */
+        body {
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif; /* Modern default font */
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* View Transitions API */
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.4s;
+        }
+
+        /* Custom Scrollbar for Logs */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+        }
     </style>
 </head>
-<body class="bg-slate-50 overflow-hidden">
-    <div id="root"></div>
+<body x-data="orionApp()" x-cloak>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <nav class="glass-panel sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-white/10">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg rotate-45 flex items-center justify-center shadow-lg shadow-blue-500/50">
+                <span class="text-white font-bold -rotate-45 text-lg">O</span>
+            </div>
+            <h1 class="text-xl font-bold tracking-tighter">ORION <span class="text-blue-400">GEN</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button @click="showSettings = true" class="p-2 hover:bg-white/10 rounded-full transition-colors duration-200" aria-label="Settings">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
+    </nav>
 
-        const App = () => {
-            const [apiKey, setApiKey] = useState(localStorage.getItem('gem_key') || '');
-            const [showSettings, setShowSettings] = useState(!apiKey);
-            const [isListening, setIsListening] = useState(false);
-            const [isSpeaking, setIsSpeaking] = useState(false);
-            const [transcript, setTranscript] = useState('');
-            const [translation, setTranslation] = useState('');
-            const [isProcessing, setIsProcessing] = useState(false);
-            const [zuluToEnglish, setZuluToEnglish] = useState(true);
-            const [error, setError] = useState(null);
-
-            const recognitionRef = useRef(null);
-            const debounceRef = useRef(null);
-            const audioRef = useRef(null);
-            const audioUnlocked = useRef(false);
-
-            // Unlock audio on first interaction
-            const unlockAudio = () => {
-                if (audioUnlocked.current) return;
-                const silentBuffer = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
-                silentBuffer.play().then(() => {
-                    audioUnlocked.current = true;
-                    console.log("Audio unlocked");
-                }).catch(e => console.error("Audio unlock failed", e));
-            };
-
-            useEffect(() => {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (SpeechRecognition) {
-                    recognitionRef.current = new SpeechRecognition();
-                    recognitionRef.current.continuous = true;
-                    recognitionRef.current.interimResults = true;
-                    
-                    recognitionRef.current.onresult = (event) => {
-                        let currentText = '';
-                        for (let i = event.resultIndex; i < event.results.length; i++) {
-                            currentText += event.results[i][0].transcript;
-                        }
-                        setTranscript(currentText);
-                        
-                        if (debounceRef.current) clearTimeout(debounceRef.current);
-                        debounceRef.current = setTimeout(() => {
-                            if (currentText.trim().length > 1) handleTranslate(currentText);
-                        }, 1500);
-                    };
-
-                    recognitionRef.current.onerror = (e) => {
-                        if (e.error === 'not-allowed') setError("Microphone access denied.");
-                    };
-                }
-
-                // Register simple Service Worker for PWA
-                if ('serviceWorker' in navigator) {
-                    const swCode = `self.addEventListener('fetch', function(event) {});`;
-                    const blob = new Blob([swCode], {type: 'application/javascript'});
-                    const swUrl = URL.createObjectURL(blob);
-                    navigator.serviceWorker.register(swUrl);
-                }
-            }, [zuluToEnglish]);
-
-            const handleTranslate = async (text) => {
-                if (!apiKey || isProcessing) return;
-                setIsProcessing(true);
-                setError(null);
-
-                try {
-                    const prompt = `Translate exactly from ${zuluToEnglish ? 'Zulu' : 'English'} to ${zuluToEnglish ? 'English' : 'Zulu'}. ONLY return the translation text. Text: ${text}`;
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await res.json();
-                    const result = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                    if (result) {
-                        setTranslation(result);
-                        playVoice(result);
-                    }
-                } catch (err) {
-                    setError("Check API connection.");
-                } finally {
-                    setIsProcessing(false);
-                }
-            };
-
-            const playVoice = async (text) => {
-                if (!apiKey) return;
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: `Say clearly in ${zuluToEnglish ? 'English' : 'Zulu'}: ${text}` }] }],
-                            generationConfig: { 
-                                responseModalities: ["AUDIO"],
-                                speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
-                            }
-                        })
-                    });
-                    const data = await res.json();
-                    const audioBase64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                    
-                    if (audioBase64) {
-                        const binary = atob(audioBase64);
-                        const array = new Uint8Array(binary.length);
-                        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
-                        const blob = new Blob([array], { type: 'audio/wav' });
-                        const url = URL.createObjectURL(blob);
-                        
-                        if (audioRef.current) {
-                            audioRef.current.src = url;
-                            setIsSpeaking(true);
-                            audioRef.current.play().catch(e => {
-                                console.error("Playback failed", e);
-                                setIsSpeaking(false);
-                            });
-                        }
-                    }
-                } catch (e) { console.error(e); }
-            };
-
-            const toggleMic = () => {
-                unlockAudio();
-                if (isListening) {
-                    recognitionRef.current.stop();
-                    setIsListening(false);
-                } else {
-                    setTranscript('');
-                    setTranslation('');
-                    recognitionRef.current.lang = zuluToEnglish ? 'zu-ZA' : 'en-US';
-                    recognitionRef.current.start();
-                    setIsListening(true);
-                }
-            };
-
-            const saveKey = (val) => {
-                setApiKey(val);
-                localStorage.setItem('gem_key', val);
-            };
-
-            // Dynamic Font Size logic
-            const getFontSize = (text, isBlue) => {
-                const len = text.length;
-                if (len < 20) return isBlue ? 'text-6xl' : 'text-5xl';
-                if (len < 50) return isBlue ? 'text-4xl' : 'text-3xl';
-                return isBlue ? 'text-2xl' : 'text-xl';
-            };
-
-            return (
-                <div className="h-screen flex flex-col max-w-xl mx-auto bg-slate-50 relative overflow-hidden">
-                    <audio ref={audioRef} onEnded={() => setIsSpeaking(false)} hidden />
-                    
-                    {showSettings && (
-                        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
-                            <div className="bg-white rounded-[3rem] p-10 w-full shadow-2xl border border-slate-100">
-                                <h2 className="text-3xl font-black mb-2 tracking-tighter">API Setup</h2>
-                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">Enter Gemini Credentials</p>
-                                <input 
-                                    type="password" 
-                                    placeholder="Paste API Key"
-                                    className="w-full p-5 bg-slate-50 rounded-2xl mb-6 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono"
-                                    value={apiKey}
-                                    onChange={(e) => saveKey(e.target.value)}
-                                />
-                                <button 
-                                    onClick={() => setShowSettings(false)}
-                                    className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 active:scale-95 transition-all"
-                                >
-                                    OPEN TRANSLATOR
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    <header className="p-6 flex justify-between items-center bg-white border-b border-slate-100 shadow-sm z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg"><span className="text-white text-xl">🌐</span></div>
-                            <div>
-                                <h1 className="text-xl font-black tracking-tighter leading-none">ZULU <span className="text-blue-600">LIVE</span></h1>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Instant Conversation</p>
-                            </div>
-                        </div>
-                        <button onClick={() => setShowSettings(true)} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-lg hover:bg-blue-600 hover:text-white transition-all">⚙️</button>
-                    </header>
-
-                    <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
-                        {/* Input Area */}
-                        <div className="flex-1 bg-white rounded-[3rem] shadow-sm border border-slate-100 p-8 flex flex-col items-center justify-center relative min-h-0 overflow-hidden">
-                            <span className="absolute top-8 left-10 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                                {zuluToEnglish ? 'Input: Zulu' : 'Input: English'}
-                            </span>
-                            <div className="overflow-y-auto hide-scrollbar text-center w-full px-2">
-                                <p className={`font-bold leading-tight transition-all duration-300 ${getFontSize(transcript, false)} ${!transcript ? 'text-slate-100' : 'text-slate-800'}`}>
-                                    {transcript || "Speak..."}
-                                </p>
-                            </div>
-                            {isProcessing && <div className="mt-4 pulse text-blue-500 font-bold text-[10px] uppercase tracking-widest">Synchronizing...</div>}
-                        </div>
-
-                        {/* Controls Hub */}
-                        <div className="flex justify-center items-center gap-6 -my-8 z-20">
-                            <button 
-                                onClick={() => { setZuluToEnglish(!zuluToEnglish); setTranscript(''); setTranslation(''); }}
-                                className="w-14 h-14 bg-white shadow-xl rounded-2xl flex items-center justify-center text-xl hover:rotate-180 transition-all duration-500"
-                                title="Swap Languages"
-                            >
-                                ⇄
-                            </button>
-                            <button 
-                                onClick={toggleMic}
-                                className={`w-28 h-28 rounded-[2.5rem] shadow-2xl flex items-center justify-center text-5xl transition-all active:scale-90 ${isListening ? 'bg-red-500 ring-8 ring-red-50' : 'bg-blue-600 ring-8 ring-blue-50'}`}
-                            >
-                                {isListening ? '🛑' : '🎤'}
-                            </button>
-                            <button 
-                                onClick={() => { setTranscript(''); setTranslation(''); setError(null); }}
-                                className="w-14 h-14 bg-white shadow-xl rounded-2xl flex items-center justify-center text-xl active:scale-90 transition-all"
-                            >
-                                🗑️
-                            </button>
-                        </div>
-
-                        {/* Output Area */}
-                        <div className={`flex-1 rounded-[3rem] shadow-2xl p-8 flex flex-col items-center justify-center relative min-h-0 overflow-hidden transition-all duration-500 ${isSpeaking ? 'bg-blue-500 pulse-speak' : 'bg-blue-600'}`}>
-                            <span className="absolute top-8 left-10 text-[10px] font-bold text-blue-200 uppercase tracking-widest">
-                                {zuluToEnglish ? 'Output: English' : 'Output: Zulu'}
-                            </span>
-                            <div className="overflow-y-auto hide-scrollbar text-center w-full px-2 text-white">
-                                {error ? (
-                                    <p className="text-xl font-bold opacity-80">{error}</p>
-                                ) : (
-                                    <p className={`font-black leading-tight transition-all duration-500 ${getFontSize(translation, true)} ${!translation ? 'text-blue-500' : 'text-white'}`}>
-                                        {translation || "..."}
-                                    </p>
-                                )}
-                            </div>
-                            {translation && (
-                                <button 
-                                    onClick={() => playVoice(translation)} 
-                                    className={`absolute bottom-8 right-10 w-14 h-14 rounded-full flex items-center justify-center transition-all ${isSpeaking ? 'bg-white text-blue-600' : 'bg-white/10 text-white'}`}
-                                >
-                                    {isSpeaking ? '🔈' : '🔊'}
-                                </button>
-                            )}
-                        </div>
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <section class="lg:col-span-4 space-y-6">
+            <div class="glass-panel rounded-2xl p-6 flex flex-col h-full">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="mr-2">✨</span> Brainstorming Core
+                </h2>
+                
+                <div class="space-y-4 flex-grow">
+                    <div>
+                        <label for="prompt" class="block text-sm font-medium text-gray-300 mb-2">App Concept</label>
+                        <textarea 
+                            id="prompt"
+                            x-model="prompt"
+                            class="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-40 placeholder-gray-500 transition-all duration-200"
+                            placeholder="e.g., A personal finance tracker with a bento grid layout..."></textarea>
                     </div>
 
-                    <footer className="p-6 text-center text-[8px] font-bold text-slate-300 uppercase tracking-[0.5em] z-10">
-                        Neural Two-Way Pipeline • 2.5 Flash
-                    </footer>
+                    <div>
+                        <label for="theme" class="block text-sm font-medium text-gray-300 mb-2">Design Variation</label>
+                        <div class="relative">
+                            <select 
+                                id="theme"
+                                x-model="selectedTheme"
+                                class="w-full bg-black/20 border border-white/10 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none transition-all duration-200">
+                                <template x-for="theme in themes" :key="theme.id">
+                                    <option :value="theme.id" x-text="theme.name"></option>
+                                </template>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            );
-        };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+                <button 
+                    @click="generateIdea()"
+                    :disabled="loading || !prompt"
+                    class="w-full mt-6 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center shadow-lg shadow-blue-900/30 relative overflow-hidden">
+                    <span x-show="!loading" class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Generate Blueprint
+                    </span>
+                    <span x-show="loading" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Analyzing...
+                    </span>
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 overflow-hidden max-h-64 flex flex-col">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Architecture Logs</h3>
+                <div class="space-y-3 overflow-y-auto pr-2 text-xs font-mono scrollbar-thin flex-grow" x-ref="logsContainer">
+                    <template x-for="log in logs" :key="log.id">
+                        <div class="flex space-x-2 items-start">
+                            <span class="text-blue-400 shrink-0">▸</span>
+                            <span x-text="log.message" class="break-words"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-8 space-y-6">
+            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col h-[700px] shadow-2xl shadow-black/50">
+                <div class="bg-black/40 px-6 py-3 flex justify-between items-center border-b border-white/10 shrink-0">
+                    <div class="flex items-center space-x-4 overflow-hidden">
+                        <div class="flex space-x-1.5 shrink-0">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        </div>
+                        <span class="text-xs text-gray-400 font-mono truncate" x-text="'preview.orion.app/' + previewId"></span>
+                    </div>
+                    <div class="flex space-x-2 shrink-0">
+                        <button @click="downloadZip()" :disabled="!hasGenerated" class="text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download .ZIP
+                        </button>
+                        <button @click="deployToGithub()" :disabled="!hasGenerated || isDeploying" class="text-xs bg-green-600 hover:bg-green-500 disabled:bg-green-800/50 disabled:cursor-not-allowed px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                            <span x-show="!isDeploying" class="flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+                                Deploy to Pages
+                            </span>
+                             <span x-show="isDeploying" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Deploying...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 relative bg-[#0f172a]">
+                    <iframe 
+                        id="preview-frame" 
+                        class="w-full h-full border-none"
+                        :srcdoc="generatedHTML"
+                        sandbox="allow-scripts allow-modals"
+                        title="App Preview">
+                    </iframe>
+                    <div x-show="loading" class="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                        <div class="text-blue-400 flex flex-col items-center">
+                             <svg class="animate-spin h-10 w-10 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="text-lg font-medium">Synthesizing Interface...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div x-show="showSettings" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-6" 
+         x-cloak>
+        <div @click="showSettings = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="glass-panel w-full max-w-md rounded-3xl p-8 relative z-10 border border-white/20 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Integrations</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="text-xs font-bold text-blue-400 uppercase tracking-wider">Gemini API Key (v1beta)</label>
+                    <input type="password" x-model="config.geminiKey" class="w-full bg-black/20 border border-white/10 rounded-lg p-3 mt-1.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="AIzaSy...">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-blue-400 uppercase tracking-wider">GitHub PAT (Fine-grained)</label>
+                    <input type="password" x-model="config.githubPat" class="w-full bg-black/20 border border-white/10 rounded-lg p-3 mt-1.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="github_pat_...">
+                    <p class="text-xs text-gray-500 mt-1">Requires 'Contents: Read & Write' and 'Pages: Read & Write' access.</p>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-blue-400 uppercase tracking-wider">GAS Webhook URL</label>
+                    <input type="url" x-model="config.gasUrl" class="w-full bg-black/20 border border-white/10 rounded-lg p-3 mt-1.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="https://script.google.com/...">
+                </div>
+            </div>
+            <button @click="saveSettings()" class="w-full mt-8 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg shadow-blue-900/20">Save Configuration</button>
+        </div>
+    </div>
+
+    <script>
+        function orionApp() {
+            return {
+                prompt: '',
+                loading: false,
+                isDeploying: false,
+                showSettings: false,
+                hasGenerated: false,
+                previewId: 'gen-' + Math.random().toString(36).substr(2, 6),
+                // Initial placeholder state
+                generatedHTML: `<!DOCTYPE html><html lang="en" class="h-full"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="https://cdn.tailwindcss.com"><\/script><style>body { font-family: sans-serif; } .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }</style></head><body class="h-full bg-slate-900 text-slate-300 flex items-center justify-center p-4"><div class="glass rounded-2xl p-8 text-center max-w-md mx-auto"><div class="mb-4 text-blue-500"><svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></div><h2 class="text-xl font-semibold text-white mb-2">Ready to Create</h2><p class="text-sm">Describe your app idea and select a theme to generate a production-ready preview.</p></div></body></html>`,
+                logs: [],
+                selectedTheme: 'modern-minimalist',
+                themes: [
+                    { id: 'modern-minimalist', name: 'Modern Minimalist' },
+                    { id: 'classic-luxury', name: 'Classic Luxury (Serif/Gold)' },
+                    { id: 'neo-brutalism', name: 'Neo-Brutalism (Bold/Contrast)' },
+                    { id: 'glass-morphism', name: 'Liquid Glass (2026 Default)' },
+                    { id: 'cyberpunk', name: 'Cyberpunk (Neon/Dark)' }
+                ],
+                config: {
+                    geminiKey: localStorage.getItem('geminiKey') || '',
+                    githubPat: localStorage.getItem('githubPat') || '',
+                    gasUrl: localStorage.getItem('gasUrl') || ''
+                },
+
+                init() {
+                    this.addLog('System Initialized. Awaiting architectural input...');
+                    this.$watch('logs', () => {
+                        this.$nextTick(() => {
+                            if (this.$refs.logsContainer) {
+                                this.$refs.logsContainer.scrollTop = this.$refs.logsContainer.scrollHeight;
+                            }
+                        });
+                    });
+                },
+
+                saveSettings() {
+                    localStorage.setItem('geminiKey', this.config.geminiKey);
+                    localStorage.setItem('githubPat', this.config.githubPat);
+                    localStorage.setItem('gasUrl', this.config.gasUrl);
+                    this.showSettings = false;
+                    this.addLog('Configuration Saved securely to local storage.');
+                },
+
+                addLog(msg) {
+                    this.logs.push({ id: Date.now(), message: `[${new Date().toLocaleTimeString()}] ${msg}` });
+                },
+
+                async generateIdea() {
+                    if(!this.config.geminiKey) {
+                        this.showSettings = true;
+                        return alert('Please set your Gemini API Key in settings first.');
+                    }
+                    this.loading = true;
+                    this.hasGenerated = false;
+                    this.addLog(`Consulting Gemini 1.5 Pro with theme: "${this.themes.find(t => t.id === this.selectedTheme).name}"...`);
+
+                    const themePrompt = this.getThemePrompt(this.selectedTheme);
+                    
+                    const masterPrompt = `Act as a 2026 Senior Frontend Engineer. 
+Task: Generate a single-file HTML/JS/Tailwind 4.0 application.
+Topic: ${this.prompt}
+
+DESIGN CONSTRAINTS:
+- **Theme**: ${themePrompt.name}
+- **Visual Style**: ${themePrompt.style}
+- **Layout**: Use a "Bento Grid" modular structure (CSS Grid) with asymmetrical, rounded cards.
+- **Interactivity**: Use Alpine.js for reactive state. Include View Transitions API for all state changes.
+- **UI Elements**: Use Lucide-inspired SVG icons.
+- **2026 Standards**: Implement :has() selectors for parent styling and Container Queries (@container) for card responsiveness.
+- **Accessibility**: Ensure ARIA labels, adequate contrast ratio (4.5:1+), and full keyboard navigation (focus-visible).
+- **Structure**: The output must be a full, valid HTML document with Tailwind CDN and Alpine.js CDN included in the <head>.
+
+Output ONLY the raw HTML code. Do not include any markdown code fence wrappers (like \`\`\`html).`;
+
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${this.config.geminiKey}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: masterPrompt }] }],
+                                generationConfig: {
+                                    temperature: 0.7,
+                                    topK: 40,
+                                    topP: 0.95,
+                                    maxOutputTokens: 8192,
+                                }
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                             const errorData = await response.json();
+                             throw new Error(errorData.error?.message || 'Gemini API Request Failed');
+                        }
+
+                        const data = await response.json();
+                        let rawCode = data.candidates[0].content.parts[0].text;
+                        
+                        // Clean markdown if present (extra safety)
+                        this.generatedHTML = rawCode.replace(/^```html\s*|\s*```$/g, '');
+                        this.hasGenerated = true;
+                        this.addLog('App Generated Successfully. Preview rendering...');
+                        
+                        // Sync to Sheets (GAS)
+                        await this.syncToGAS('Generate', 'Success');
+                    } catch (e) {
+                        this.addLog('Generation Error: ' + e.message);
+                        await this.syncToGAS('Generate', 'Failed: ' + e.message);
+                        alert('Generation failed. Please check your API key and try again. Error: ' + e.message);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                getThemePrompt(themeId) {
+                    const themes = {
+                        'modern-minimalist': {
+                            name: 'Modern Minimalist',
+                            style: 'Clean, white and light gray background, sans-serif fonts (e.g., Inter, Geist), lots of white space, subtle shadows, primary color is a muted blue or charcoal.'
+                        },
+                        'classic-luxury': {
+                            name: 'Classic Luxury',
+                            style: 'Deep navy blue or forest green background, gold/brass accents for borders and buttons, elegant serif fonts (e.g., Playfair Display, Merriweather), rich textures.'
+                        },
+                        'neo-brutalism': {
+                            name: 'Neo-Brutalism',
+                            style: 'High contrast, raw, unpolished look. Thick black borders, stark shadows (no blur), clashing vibrant colors (e.g., acid green, hot pink), bold sans-serif or mono fonts, exposed grid lines.'
+                        },
+                        'glass-morphism': {
+                            name: 'Liquid Glass',
+                            style: 'Multi-layered glass panels with high backdrop blur, dynamic mesh gradients in the background (blues, purples), thin frosted white borders, glowing text elements, very fluid animations.'
+                        },
+                        'cyberpunk': {
+                            name: 'Cyberpunk',
+                            style: 'Dark background (black/near-black), neon glowing lines (cyan, magenta, purple), digital glitch effects, futuristic monospace fonts, scanlines, high-tech HUD interface elements.'
+                        }
+                    };
+                    return themes[themeId];
+                },
+
+                async syncToGAS(action, status) {
+                    if(!this.config.gasUrl) return;
+                    this.addLog('Syncing metadata to Google Sheets database...');
+                    try {
+                        await fetch(this.config.gasUrl, {
+                            method: 'POST',
+                            mode: 'no-cors', // Important for GAS
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                timestamp: new Date().toISOString(),
+                                action: action,
+                                prompt: this.prompt,
+                                theme: this.selectedTheme,
+                                status: status
+                            })
+                        });
+                    } catch (e) {
+                        console.error("GAS Sync Error (expected due to no-cors):", e);
+                        // Don't clutter UI logs with expected CORS warnings
+                    }
+                },
+
+                async deployToGithub() {
+                    const repoName = `orion-app-${Date.now().toString(36)}`;
+                    const pat = this.config.githubPat;
+                    
+                    if(!pat) {
+                        this.showSettings = true;
+                        return alert('A GitHub Personal Access Token (Fine-grained) is required for deployment.');
+                    }
+
+                    this.isDeploying = true;
+                    
+                    try {
+                        this.addLog('Initializing secure handshake with GitHub API...');
+                        
+                        // 1. Create Repository
+                        const repoRes = await fetch('https://api.github.com/user/repos', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
+                            body: JSON.stringify({ name: repoName, auto_init: false, private: false, description: `Generated by Orion App Gen using ${this.selectedTheme} theme.` }) 
+                        });
+                        
+                        if (!repoRes.ok) {
+                             const error = await repoRes.json();
+                             throw new Error(`Repo creation failed: ${error.message}`);
+                        }
+                        const repoData = await repoRes.json();
+                        this.addLog(`Repository '${repoData.full_name}' created.`);
+                        
+                        // 2. Upload index.html to 'main' branch
+                        this.addLog('Uploading production build to main branch...');
+                        // Using unescape(encodeURIComponent(str)) to handle UTF-8 characters correctly in btoa
+                        const contentBase64 = btoa(unescape(encodeURIComponent(this.generatedHTML)));
+                        
+                        const uploadRes = await fetch(`https://api.github.com/repos/${repoData.owner.login}/${repoName}/contents/index.html`, {
+                            method: 'PUT',
+                            headers: { 'Authorization': `Bearer ${pat}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
+                            body: JSON.stringify({
+                                message: "🚀 Orion Auto-Deploy: Initial Commit",
+                                content: contentBase64,
+                                branch: 'main'
+                            })
+                        });
+                        
+                        if (!uploadRes.ok) throw new Error('File upload failed.');
+
+                        // 3. GitHub Pages Lifecycle Delay
+                        this.addLog('Waiting for GitHub global propagation (this takes ~15s)...');
+                        await new Promise(r => setTimeout(r, 15000));
+
+                        // 4. Enable GitHub Pages
+                        this.addLog('Activating GitHub Pages hosting...');
+                        const pagesRes = await fetch(`https://api.github.com/repos/${repoData.owner.login}/${repoName}/pages`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${pat}`, 'Accept': 'application/vnd.github.v3+json', 'X-GitHub-Api-Version': '2022-11-28' },
+                            body: JSON.stringify({ source: { branch: 'main', path: '/' } })
+                        });
+
+                         if (!pagesRes.ok) {
+                             // If Pages is already enabled (sometimes happens on public repos), this might fail, which is fine.
+                             if (pagesRes.status !== 409) { // 409 Conflict means already exists
+                                 const error = await pagesRes.json();
+                                 // Don't throw, just log, as the site might still work.
+                                 this.addLog(`Warning during Pages activation: ${error.message}`);
+                             }
+                        }
+
+                        const liveUrl = `https://${repoData.owner.login}.github.io/${repoName}/`;
+                        this.addLog(`DEPLOYMENT SUCCESSFUL! Your app is live.`);
+                        
+                        // Sync deployment success to GAS
+                        await this.syncToGAS('Deploy', `Success: ${liveUrl}`);
+                        
+                        // Open the live URL
+                        window.open(liveUrl, '_blank');
+                        
+                    } catch (e) {
+                        this.addLog(`Deploy Failed: ${e.message}`);
+                        await this.syncToGAS('Deploy', 'Failed: ' + e.message);
+                        alert(`Deployment failed: ${e.message}. Check the logs for details.`);
+                    } finally {
+                        this.isDeploying = false;
+                    }
+                },
+
+                async downloadZip() {
+                    if (!this.generatedHTML) return;
+                    try {
+                        const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
+                        await zipWriter.add("index.html", new zip.TextReader(this.generatedHTML));
+                        const blob = await zipWriter.close();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `orion-project-${this.selectedTheme}.zip`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.addLog('Project archive (.zip) downloaded successfully.');
+                    } catch (e) {
+                        this.addLog('Error creating ZIP: ' + e.message);
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>
-
